@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/prestige_popup.gd" id="1"]
+
+[node name="PrestigePopup" type="AcceptDialog"]
+title = "Confirmar Recalibrar"
+dialog_hide_on_ok = true
+ok_button_text = "Recalibrar"
+script = ExtResource("1")
+
+[node name="SummaryLabel" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 220)
+bbcode_enabled = true
+fit_content = true

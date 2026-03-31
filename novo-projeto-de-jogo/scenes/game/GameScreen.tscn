@@ -1,0 +1,254 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/game_screen.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/popups/PrestigePopup.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/popups/OfflineProgressPopup.tscn" id="3"]
+
+[node name="GameScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.07, 0.11, 1)
+
+[node name="RootMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+
+[node name="RootVBox" type="VBoxContainer" parent="RootMargin"]
+layout_mode = 2
+
+[node name="TopBar" type="PanelContainer" parent="RootMargin/RootVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 74)
+
+[node name="TopBarContent" type="HBoxContainer" parent="RootMargin/RootVBox/TopBar"]
+layout_mode = 2
+
+[node name="TitleBox" type="VBoxContainer" parent="RootMargin/RootVBox/TopBar/TopBarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GameTitle" type="Label" parent="RootMargin/RootVBox/TopBar/TopBarContent/TitleBox"]
+text = "Bureau of Infinity"
+
+[node name="ResourceSummary" type="Label" parent="RootMargin/RootVBox/TopBar/TopBarContent/TitleBox"]
+unique_name_in_owner = true
+text = "Resumo"
+
+[node name="ButtonBar" type="HBoxContainer" parent="RootMargin/RootVBox/TopBar/TopBarContent"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="RootMargin/RootVBox/TopBar/TopBarContent/ButtonBar"]
+unique_name_in_owner = true
+text = "Salvar"
+
+[node name="OptionsButton" type="Button" parent="RootMargin/RootVBox/TopBar/TopBarContent/ButtonBar"]
+unique_name_in_owner = true
+text = "Opções"
+
+[node name="MenuButton" type="Button" parent="RootMargin/RootVBox/TopBar/TopBarContent/ButtonBar"]
+unique_name_in_owner = true
+text = "Menu"
+
+[node name="MainSplit" type="HBoxContainer" parent="RootMargin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftPanel" type="PanelContainer" parent="RootMargin/RootVBox/MainSplit"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+
+[node name="LeftMargin" type="MarginContainer" parent="RootMargin/RootVBox/MainSplit/LeftPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="LeftVBox" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin"]
+layout_mode = 2
+
+[node name="MainActionTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+text = "Ação Principal"
+
+[node name="GenerateButton" type="Button" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+text = "Gerar Ordem"
+
+[node name="ClickValueLabel" type="Label" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+text = "Clique"
+
+[node name="PrestigeButton" type="Button" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+text = "Recalibrar"
+
+[node name="AutoRecalibrateToggle" type="CheckBox" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+text = "Auto-recalibrar"
+
+[node name="AutoUpgradeToggle" type="CheckBox" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+text = "Auto-upgrades"
+
+[node name="AutoRecalibrateTarget" type="SpinBox" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 1000000.0
+step = 1.0
+
+[node name="QuickStatsTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+text = "Resumo da Run"
+
+[node name="QuickStatsLabel" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+bbcode_enabled = true
+fit_content = true
+
+[node name="ObjectivePreviewTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+text = "Objetivos Recentes"
+
+[node name="ObjectivePreview" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+bbcode_enabled = true
+fit_content = true
+
+[node name="CenterPanel" type="PanelContainer" parent="RootMargin/RootVBox/MainSplit"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="CenterMargin" type="MarginContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Tabs" type="TabContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ProductionTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ProductionList" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/ProductionTab"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StructuresTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StructuresList" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/StructuresTab"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UpgradesTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="UpgradesList" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/UpgradesTab"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MetaTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MetaList" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/MetaTab"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ObjectivesTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="ObjectivesList" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/ObjectivesTab"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StatisticsTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="StatisticsText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/StatisticsTab"]
+unique_name_in_owner = true
+bbcode_enabled = true
+fit_content = true
+
+[node name="OptionsTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="OptionsText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/OptionsTab"]
+unique_name_in_owner = true
+bbcode_enabled = true
+fit_content = true
+
+[node name="HelpTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="HelpText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/HelpTab"]
+unique_name_in_owner = true
+bbcode_enabled = true
+fit_content = true
+
+[node name="RightPanel" type="PanelContainer" parent="RootMargin/RootVBox/MainSplit"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+
+[node name="RightMargin" type="MarginContainer" parent="RootMargin/RootVBox/MainSplit/RightPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="RightVBox" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin"]
+layout_mode = 2
+
+[node name="MilestoneTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
+text = "Marcos"
+
+[node name="MilestoneText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 220)
+bbcode_enabled = true
+fit_content = true
+
+[node name="LogTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
+text = "Log de Eventos"
+
+[node name="LogScroll" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogList" type="VBoxContainer" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox/LogScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PrestigePopup" parent="." instance=ExtResource("2")]
+unique_name_in_owner = true
+
+[node name="OfflineProgressPopup" parent="." instance=ExtResource("3")]
+unique_name_in_owner = true

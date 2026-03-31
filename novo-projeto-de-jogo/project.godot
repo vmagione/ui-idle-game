@@ -1,15 +1,29 @@
 ; Engine configuration file.
-; It's best edited using the editor UI and not directly,
-; since the parameters that go here are not all obvious.
-;
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
+; Bureau of Infinity - UI-only idle incremental for Godot 4.3+
 
 config_version=5
 
 [application]
 
-config/name="Novo Projeto de Jogo"
-config/features=PackedStringArray("4.5", "Forward Plus")
+config/name="Bureau of Infinity"
+config/features=PackedStringArray("4.3", "Forward Plus")
+run/main_scene="res://scenes/main/Main.tscn"
 config/icon="res://icon.svg"
+
+[autoload]
+
+ConfigManager="*res://scripts/managers/config_manager.gd"
+NumberFormatter="*res://scripts/managers/number_formatter.gd"
+SaveManager="*res://scripts/managers/save_manager.gd"
+GameManager="*res://scripts/managers/game_manager.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
