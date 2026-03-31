@@ -6,16 +6,24 @@ extends PanelContainer
 @onready var buy_button: Button = %BuyButton
 
 var upgrade_id := ""
+var upgrade_data: Dictionary = {}
 
 func _ready() -> void:
 	ThemeHelper.apply_panel(self, "panel")
 	ThemeHelper.apply_button(buy_button)
 	buy_button.pressed.connect(func(): GameManager.buy_upgrade(upgrade_id))
+	if not upgrade_data.is_empty():
+		_apply_data()
 
 func setup(data: Dictionary) -> void:
+	upgrade_data = data
 	upgrade_id = data["id"]
-	title_label.text = data["name"]
-	desc_label.text = data["desc"]
+	if is_node_ready():
+		_apply_data()
+
+func _apply_data() -> void:
+	title_label.text = upgrade_data["name"]
+	desc_label.text = upgrade_data["desc"]
 	refresh()
 
 func refresh() -> void:

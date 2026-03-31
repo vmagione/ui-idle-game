@@ -9,13 +9,19 @@ var objective_data: Dictionary
 
 func _ready() -> void:
 	ThemeHelper.apply_panel(self, "panel")
+	if not objective_data.is_empty():
+		_apply_data()
 
 func setup(data: Dictionary) -> void:
 	objective_data = data
-	title_label.text = data["name"]
-	desc_label.text = data["desc"]
-	if data["reward"].has("resource"):
-		reward_label.text = "Recompensa: %s %s" % [NumberFormatter.format_number(float(data["reward"]["amount"]), ConfigManager.use_scientific()), String(data["reward"]["resource"]).capitalize()]
+	if is_node_ready():
+		_apply_data()
+
+func _apply_data() -> void:
+	title_label.text = objective_data["name"]
+	desc_label.text = objective_data["desc"]
+	if objective_data["reward"].has("resource"):
+		reward_label.text = "Recompensa: %s %s" % [NumberFormatter.format_number(float(objective_data["reward"]["amount"]), ConfigManager.use_scientific()), String(objective_data["reward"]["resource"]).capitalize()]
 	else:
 		reward_label.text = "Recompensa: multiplicador de run"
 	refresh()
