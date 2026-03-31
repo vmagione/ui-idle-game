@@ -30,11 +30,11 @@ func setup(data: Dictionary) -> void:
 	refresh()
 
 func refresh() -> void:
-	var scientific := ConfigManager.use_scientific()
-	var def := GameManager.get_generator_def(generator_id)
-	var owned := int(GameManager.state["generators"][generator_id])
-	var mode := int(GameManager.state["automation"]["autobuyers"][generator_id]["mode"])
-	var auto_enabled := bool(GameManager.state["automation"]["autobuyers"][generator_id]["enabled"])
+	var scientific: bool = ConfigManager.use_scientific()
+	var def: Dictionary = GameManager.get_generator_def(generator_id)
+	var owned: int = int(GameManager.state["generators"][generator_id])
+	var mode: int = int(GameManager.state["automation"]["autobuyers"][generator_id]["mode"])
+	var auto_enabled: bool = bool(GameManager.state["automation"]["autobuyers"][generator_id]["enabled"])
 	owned_label.text = "Quantidade: %d" % owned
 	output_label.text = "Unidade: %s/s | Total: %s/s" % [
 		NumberFormatter.format_number(GameManager.get_generator_output(generator_id), scientific),

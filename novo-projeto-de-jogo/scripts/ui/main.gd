@@ -10,6 +10,7 @@ var options_popup: Window
 func _ready() -> void:
 	options_popup = options_scene.instantiate()
 	add_child(options_popup)
+	options_popup.hide()
 	_show_menu()
 
 func _show_menu() -> void:
@@ -19,7 +20,7 @@ func _show_menu() -> void:
 	add_child(current_screen)
 	current_screen.start_new_requested.connect(_on_start_new)
 	current_screen.continue_requested.connect(_on_continue)
-	current_screen.options_requested.connect(func(): options_popup.popup_centered_ratio(0.45))
+	current_screen.options_requested.connect(func(): options_popup.open_popup())
 
 func _show_game() -> void:
 	if is_instance_valid(current_screen):

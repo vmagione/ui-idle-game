@@ -21,6 +21,6 @@ func setup(data: Dictionary) -> void:
 	refresh()
 
 func refresh() -> void:
-	var complete := GameManager.state["objectives_completed"].has(objective_data["id"])
+	var complete: bool = GameManager.state["objectives_completed"].has(objective_data["id"])
 	status_label.text = "Concluído" if complete else "Em andamento"
 	status_label.modulate = ThemeHelper.color("good") if complete else ThemeHelper.color("warn")

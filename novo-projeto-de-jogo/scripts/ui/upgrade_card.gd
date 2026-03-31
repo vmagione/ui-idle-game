@@ -19,11 +19,11 @@ func setup(data: Dictionary) -> void:
 	refresh()
 
 func refresh() -> void:
-	var def := GameManager.get_upgrade_def(upgrade_id)
-	var lvl := GameManager.get_upgrade_level(upgrade_id)
-	var max_level := int(def["max_level"])
-	var cost := GameManager.get_upgrade_cost(upgrade_id)
-	var resource := String(def["cost_resource"])
+	var def: Dictionary = GameManager.get_upgrade_def(upgrade_id)
+	var lvl: int = GameManager.get_upgrade_level(upgrade_id)
+	var max_level: int = int(def["max_level"])
+	var cost: float = GameManager.get_upgrade_cost(upgrade_id)
+	var resource: String = String(def["cost_resource"])
 	status_label.text = "Nível %d/%d | Custo: %s %s" % [lvl, max_level, NumberFormatter.format_number(cost, ConfigManager.use_scientific()), resource.capitalize()]
 	buy_button.disabled = lvl >= max_level or not GameManager.can_afford(resource, cost)
 	buy_button.text = "Concluído" if lvl >= max_level else "Adquirir"

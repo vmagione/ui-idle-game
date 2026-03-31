@@ -40,6 +40,7 @@ var options_popup: Window
 func _ready() -> void:
 	options_popup = OPTIONS_POPUP.instantiate()
 	add_child(options_popup)
+	options_popup.hide()
 	_apply_theme()
 	_connect_ui()
 	_build_lists()
@@ -59,7 +60,7 @@ func _apply_theme() -> void:
 func _connect_ui() -> void:
 	generate_button.pressed.connect(GameManager.click_order)
 	%SaveButton.pressed.connect(GameManager.save_game)
-	%OptionsButton.pressed.connect(func(): options_popup.popup_centered_ratio(0.45))
+	%OptionsButton.pressed.connect(func(): options_popup.open_popup())
 	%MenuButton.pressed.connect(func():
 		GameManager.save_game()
 		back_to_menu_requested.emit()
@@ -136,8 +137,8 @@ func _fill_static_text() -> void:
 	options_text.text = "Use o botão Opções no topo para editar notação, tema, autosave, confirmações e economia."
 
 func _refresh_all() -> void:
-	var s := GameManager.get_state()
-	var sci := ConfigManager.use_scientific()
+	var s: Dictionary = GameManager.get_state()
+	var sci: bool = ConfigManager.use_scientific()
 	resource_summary.text = "Ordem %s | %s/s | Estruturas %s | Núcleos %s | Ecos %s" % [
 		NumberFormatter.format_number(s["resources"]["order"], sci),
 		NumberFormatter.format_number(GameManager.get_order_per_second(), sci),
@@ -157,7 +158,7 @@ func _refresh_all() -> void:
 		NumberFormatter.format_number(float(s["total_resources"]["order"]), sci),
 		"concluída" if s["campaign_complete"] else "em progresso"
 	]
-	var preview_lines := []
+	var preview_lines: Array[String] = []
 	for objective in GameManager.objective_defs:
 		if not s["objectives_completed"].has(objective["id"]) and preview_lines.size() < 4:
 			preview_lines.append("- %s" % objective["name"])
@@ -178,9 +179,9 @@ func _refresh_all() -> void:
 	_animate_primary_button()
 
 func _refresh_structures() -> void:
-	var sci := ConfigManager.use_scientific()
+	var sci: bool = ConfigManager.use_scientific()
 	for child in structures_list.get_children():
-		var id := String(child.get_meta("id"))
+		var id: String = String(child.get_meta("id"))
 		var btn: Button = child.get_meta("button")
 		var desc: Label = child.get_meta("desc")
 		btn.text = "Adquirir (%s Ordem)" % NumberFormatter.format_number(GameManager.get_structure_cost(id), sci)
@@ -192,8 +193,8 @@ func _refresh_tabs() -> void:
 	%MetaTab.visible = GameManager.is_tab_unlocked("meta")
 
 func _refresh_statistics() -> void:
-	var s := GameManager.get_state()
-	var sci := ConfigManager.use_scientific()
+	var s: Dictionary = GameManager.get_state()
+	var sci: bool = ConfigManager.use_scientific()
 	statistics_text.text = "[b]Estatísticas[/b]\nTempo total: %s\nOrdem total produzida: %s\nMaior Ordem: %s\nMaior produção/s: %s\nCliques totais: %d\nGeradores comprados: %d\nRecalibrações: %d\nNúcleos totais: %s\nEcos totais: %s\nÚltimo offline: %s" % [
 		NumberFormatter.format_time(float(s["stats"]["total_play_time"])),
 		NumberFormatter.format_number(float(s["total_resources"]["order"]), sci),
@@ -208,9 +209,9 @@ func _refresh_statistics() -> void:
 	]
 
 func _refresh_milestones() -> void:
-	var lines := []
+	var lines: Array[String] = []
 	for milestone in GameManager.milestone_defs:
-		var done := GameManager.state["milestones_completed"].has(milestone["id"])
+		var done: bool = GameManager.state["milestones_completed"].has(milestone["id"])
 		lines.append("%s %s" % ["[color=#8be9a8]OK[/color]" if done else "[color=#ffd166]...[/color]", milestone["name"]])
 	milestone_text.text = "[b]Marcos Passivos[/b]\n%s" % "\n".join(lines)
 
@@ -226,7 +227,7 @@ func _animate_primary_button() -> void:
 	if not ConfigManager.get_value("ui_animations", true):
 		generate_button.scale = Vector2.ONE
 		return
-	var target := 1.02 if int(Time.get_ticks_msec() / 400) % 2 == 0 else 0.98
+	var target: float = 1.02 if int(Time.get_ticks_msec() / 400) % 2 == 0 else 0.98
 	generate_button.scale = Vector2(target, target)
 
 func _on_prestige_pressed() -> void:
