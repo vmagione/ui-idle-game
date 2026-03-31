@@ -202,18 +202,18 @@ func get_projected_cores() -> float:
 	return floor(raw)
 
 func perform_prestige() -> bool:
-	var gained := get_projected_cores()
+	var gained: float = get_projected_cores()
 	if gained <= 0.0:
 		return false
-	var cores_after := state["resources"]["cores"] + gained
-	var echoes_after := state["resources"]["echoes"]
-	var stats_copy := state["stats"].duplicate(true)
+	var cores_after: float = float(state["resources"]["cores"]) + gained
+	var echoes_after: float = float(state["resources"]["echoes"])
+	var stats_copy: Dictionary = state["stats"].duplicate(true)
 	stats_copy["total_recalibrations"] += 1
 	stats_copy["total_cores_earned"] += gained
-	var completed_objectives := state["objectives_completed"].duplicate(true)
-	var completed_milestones := state["milestones_completed"].duplicate(true)
-	var meta_levels := _extract_meta_upgrades()
-	var keep_upgrades := {}
+	var completed_objectives: Dictionary = state["objectives_completed"].duplicate(true)
+	var completed_milestones: Dictionary = state["milestones_completed"].duplicate(true)
+	var meta_levels: Dictionary = _extract_meta_upgrades()
+	var keep_upgrades: Dictionary = {}
 	if get_upgrade_level("preservation_protocol") > 0:
 		for upgrade_id in ["bulk_procurement", "detailed_metrics", "automation_bus", "offline_report", "auto_upgrade_unlock"]:
 			if int(state["upgrades"].get(upgrade_id, 0)) > 0:
@@ -406,19 +406,19 @@ func log_event(message: String) -> void:
 	log_added.emit(message)
 
 func _run_automation() -> void:
-	var autobuy_enabled := get_upgrade_level("autobuyer_permit") > 0 or (state["stats"]["total_recalibrations"] >= 1 and get_upgrade_level("automation_bus") > 0)
+	var autobuy_enabled: bool = get_upgrade_level("autobuyer_permit") > 0 or (state["stats"]["total_recalibrations"] >= 1 and get_upgrade_level("automation_bus") > 0)
 	if autobuy_enabled:
 		for generator_id in state["automation"]["autobuyers"].keys():
-			var buyer := state["automation"]["autobuyers"][generator_id]
+			var buyer: Dictionary = state["automation"]["autobuyers"][generator_id]
 			if buyer["enabled"]:
 				buy_generator(generator_id, int(buyer["mode"]), true)
-	var auto_upgrades_enabled := state["automation"]["auto_upgrades"] and (get_upgrade_level("auto_upgrade_permit") > 0 or get_upgrade_level("auto_upgrade_unlock") > 0)
+	var auto_upgrades_enabled: bool = bool(state["automation"]["auto_upgrades"]) and (get_upgrade_level("auto_upgrade_permit") > 0 or get_upgrade_level("auto_upgrade_unlock") > 0)
 	if auto_upgrades_enabled:
 		for upgrade in get_visible_upgrades():
 			if upgrade["type"] == "meta":
 				continue
 			buy_upgrade(upgrade["id"], true)
-	var auto_recal := state["automation"]["auto_recalibrate"]
+	var auto_recal: Dictionary = state["automation"]["auto_recalibrate"]
 	if auto_recal["enabled"] and can_prestige() and get_projected_cores() >= float(auto_recal["target"]):
 		perform_prestige()
 
