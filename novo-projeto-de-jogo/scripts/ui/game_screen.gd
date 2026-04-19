@@ -8,6 +8,17 @@ const OBJECTIVE_CARD := preload("res://scenes/ui/ObjectiveCard.tscn")
 const LOG_ITEM := preload("res://scenes/ui/LogItem.tscn")
 const OPTIONS_POPUP := preload("res://scenes/popups/OptionsPopup.tscn")
 
+const TAB_PRODUCTION := 0
+const TAB_STRUCTURES := 1
+const TAB_UPGRADES := 2
+const TAB_META := 3
+const TAB_OBJECTIVES := 4
+const TAB_ACHIEVEMENTS := 5
+const TAB_STATISTICS := 6
+const TAB_OPTIONS := 7
+const TAB_HELP := 8
+const TAB_ARCHIVE := 9
+
 var generator_cards := {}
 var upgrade_cards := {}
 var meta_cards := {}
@@ -77,16 +88,16 @@ func _connect_ui() -> void:
 	focus_option.item_selected.connect(_on_focus_selected)
 
 func _build_lists() -> void:
-	tabs.set_tab_title(0, "Produção")
-	tabs.set_tab_title(1, "Estruturas")
-	tabs.set_tab_title(2, "Upgrades")
-	tabs.set_tab_title(3, "Meta")
-	tabs.set_tab_title(4, "Objetivos")
-	tabs.set_tab_title(5, "Conquistas")
-	tabs.set_tab_title(6, "Estatísticas")
-	tabs.set_tab_title(7, "Opções")
-	tabs.set_tab_title(8, "Ajuda")
-	tabs.set_tab_title(9, "Arquivo")
+	tabs.set_tab_title(TAB_PRODUCTION, "Produção")
+	tabs.set_tab_title(TAB_STRUCTURES, "Estruturas")
+	tabs.set_tab_title(TAB_UPGRADES, "Upgrades")
+	tabs.set_tab_title(TAB_META, "Meta")
+	tabs.set_tab_title(TAB_OBJECTIVES, "Objetivos")
+	tabs.set_tab_title(TAB_ACHIEVEMENTS, "Conquistas")
+	tabs.set_tab_title(TAB_STATISTICS, "Estatísticas")
+	tabs.set_tab_title(TAB_OPTIONS, "Opções")
+	tabs.set_tab_title(TAB_HELP, "Ajuda")
+	tabs.set_tab_title(TAB_ARCHIVE, "Arquivo")
 	for child in production_list.get_children():
 		child.queue_free()
 	for child in upgrades_list.get_children():
@@ -201,8 +212,21 @@ func _refresh_structures() -> void:
 		desc.text = "%s\nPossui: %d" % [GameManager.get_structure_def(id)["description"], GameManager.get_structure_count(id)]
 
 func _refresh_tabs() -> void:
-	%StructuresTab.visible = GameManager.is_tab_unlocked("structures")
-	%MetaTab.visible = GameManager.is_tab_unlocked("meta")
+	var current_tab: int = tabs.current_tab
+	var structures_unlocked: bool = GameManager.is_tab_unlocked("structures")
+	var meta_unlocked: bool = GameManager.is_tab_unlocked("meta")
+
+	tabs.set_tab_hidden(TAB_STRUCTURES, not structures_unlocked)
+	tabs.set_tab_hidden(TAB_META, not meta_unlocked)
+
+	if tabs.is_tab_hidden(current_tab):
+		tabs.current_tab = _get_first_visible_tab()
+
+func _get_first_visible_tab() -> int:
+	for i in range(tabs.get_tab_count()):
+		if not tabs.is_tab_hidden(i):
+			return i
+	return TAB_PRODUCTION
 
 func _refresh_focus_controls() -> void:
 	var unlocked := GameManager.get_unlocked_focus_directives()
