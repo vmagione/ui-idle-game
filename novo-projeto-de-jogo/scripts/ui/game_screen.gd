@@ -27,7 +27,7 @@ var options_popup: Window
 
 @onready var tabs: TabContainer = %Tabs
 @onready var production_list: VBoxContainer = %ProductionList
-@onready var structures_list: VBoxContainer = %StructuresList
+@onready var structures_list: GridContainer = %StructuresList
 @onready var upgrades_list: VBoxContainer = %UpgradesList
 @onready var meta_list: VBoxContainer = %MetaList
 @onready var objectives_list: VBoxContainer = %ObjectivesList
@@ -117,6 +117,7 @@ func _build_lists() -> void:
 		generator_cards[generator["id"]] = card
 	for structure in GameManager.structure_defs:
 		var panel := PanelContainer.new()
+		panel.custom_minimum_size = Vector2(280, 0)
 		ThemeHelper.apply_panel(panel, "panel")
 		var vb := VBoxContainer.new()
 		panel.add_child(vb)
