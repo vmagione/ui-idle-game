@@ -117,6 +117,18 @@ min_value = 1.0
 max_value = 1000000.0
 step = 1.0
 
+[node name="FocusTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+text = "Diretiva de Foco"
+
+[node name="FocusOption" type="OptionButton" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+
+[node name="FocusDescription" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+bbcode_enabled = true
+fit_content = true
+
 [node name="QuickStatsTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/LeftPanel/LeftMargin/LeftVBox"]
 text = "Resumo da Run"
 
@@ -189,6 +201,14 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="AchievementsTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="AchievementsText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/AchievementsTab"]
+unique_name_in_owner = true
+bbcode_enabled = true
+fit_content = true
+
 [node name="StatisticsTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
 layout_mode = 2
 
@@ -213,6 +233,14 @@ unique_name_in_owner = true
 bbcode_enabled = true
 fit_content = true
 
+[node name="ArchiveTab" type="ScrollContainer" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs"]
+layout_mode = 2
+
+[node name="ArchiveText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/CenterPanel/CenterMargin/Tabs/ArchiveTab"]
+unique_name_in_owner = true
+bbcode_enabled = true
+fit_content = true
+
 [node name="RightPanel" type="PanelContainer" parent="RootMargin/RootVBox/MainSplit"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 0)
@@ -233,6 +261,15 @@ text = "Marcos"
 [node name="MilestoneText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 220)
+bbcode_enabled = true
+fit_content = true
+
+[node name="NotificationsTitle" type="Label" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
+text = "Destaques"
+
+[node name="NotificationsText" type="RichTextLabel" parent="RootMargin/RootVBox/MainSplit/RightPanel/RightMargin/RightVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
 bbcode_enabled = true
 fit_content = true
 

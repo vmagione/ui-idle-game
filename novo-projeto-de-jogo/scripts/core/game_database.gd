@@ -9,6 +9,7 @@ const META_TREE_UNLOCK_CORES := 10.0
 const OFFLINE_BASE_CAP := 2.0 * 3600.0
 const OFFLINE_EXTENDED_CAP := 8.0 * 3600.0
 const LOG_LIMIT := 60
+const NOTIFICATION_LIMIT := 12
 const TICK_RATE := 5.0
 const UI_RATE := 10.0
 const AUTOSAVE_DEFAULT := 20.0
@@ -111,4 +112,40 @@ static func milestones() -> Array:
 		{"id":"m_echo_unlock","name":"Ecos Detectados","desc":"Sistema de Eco disponível.","kind":"stat","target":"echoes","value":1},
 		{"id":"m_echo_5","name":"5 Ecos","desc":"Bônus meta adicional.","kind":"stat","target":"echoes","value":5},
 		{"id":"m_campaign","name":"Campanha Base Concluída","desc":"Você estabilizou o Bureau of Infinity.","kind":"stat","target":"campaign_complete","value":1}
+	]
+
+static func focus_directives() -> Array:
+	return [
+		{"id":"balanced","name":"Equilíbrio Operacional","desc":"Sem penalidades. Crescimento consistente para a run.","unlock":"start"},
+		{"id":"manual","name":"Entrada Manual","desc":"Clique +220%, produção automática -20%. Excelente para early game ativo.","unlock":"start"},
+		{"id":"industrial","name":"Escala Industrial","desc":"Produção automática +45%, clique -35%. Melhor para runs mais idle.","unlock":"structures"},
+		{"id":"prestige","name":"Pressão de Recalibração","desc":"Ganho de Núcleos +35%, produção atual -18%. Bom para fechar ciclos.","unlock":"prestige"},
+		{"id":"resonant","name":"Ressonância de Eco","desc":"Estruturas e Ecos mais fortes, custos de geradores +6%.","unlock":"echoes"}
+	]
+
+static func achievements() -> Array:
+	return [
+		{"id":"ach_first_click","name":"Primeiro Carimbo","desc":"Clique pela primeira vez.","kind":"stat","target":"total_clicks","value":1,"reward":{"type":"click_mult","value":0.05}},
+		{"id":"ach_click_100","name":"Operador Incansável","desc":"Realize 100 cliques.","kind":"stat","target":"total_clicks","value":100,"reward":{"type":"click_mult","value":0.08}},
+		{"id":"ach_order_1m","name":"Fluxo de Seis Dígitos","desc":"Produza 1M de Ordem total.","kind":"total_order","value":1.0e6,"reward":{"type":"global_mult","value":0.06}},
+		{"id":"ach_order_1b","name":"Departamento Planetário","desc":"Produza 1B de Ordem total.","kind":"total_order","value":1.0e9,"reward":{"type":"global_mult","value":0.10}},
+		{"id":"ach_scribes_50","name":"Sala de Escrita","desc":"Tenha 50 Escribas.","kind":"generator","target":"scribes","value":50,"reward":{"type":"generator_mult","target":"scribes","value":0.25}},
+		{"id":"ach_protocols_25","name":"Malha de Protocolos","desc":"Tenha 25 Protocolos.","kind":"generator","target":"protocols","value":25,"reward":{"type":"generator_mult","target":"protocols","value":0.25}},
+		{"id":"ach_structures_20","name":"Cidade de Painéis","desc":"Acumule 20 Estruturas no total.","kind":"structures_total","value":20,"reward":{"type":"structure_efficiency","value":0.10}},
+		{"id":"ach_first_prestige","name":"Ciclo Reiniciado","desc":"Realize sua primeira recalibração.","kind":"stat","target":"total_recalibrations","value":1,"reward":{"type":"core_gain","value":0.10}},
+		{"id":"ach_cores_100","name":"Reserva Permanente","desc":"Ganhe 100 Núcleos ao longo da campanha.","kind":"stat","target":"total_cores_earned","value":100,"reward":{"type":"core_gain","value":0.18}},
+		{"id":"ach_echo_5","name":"Ruído de Fundo","desc":"Acumule 5 Ecos.","kind":"resource","target":"echoes","value":5,"reward":{"type":"echo_gain","value":0.20}},
+		{"id":"ach_all_objectives_10","name":"Unidade de Execução","desc":"Conclua 10 objetivos.","kind":"objectives_completed","value":10,"reward":{"type":"global_mult","value":0.12}},
+		{"id":"ach_campaign","name":"Bureau of Infinity","desc":"Conclua a campanha base.","kind":"stat","target":"campaign_complete","value":1,"reward":{"type":"global_mult","value":0.20}}
+	]
+
+static func codex_entries() -> Array:
+	return [
+		{"id":"codex_order","title":"Ordem","body":"A menor unidade operacional do Bureau. Tudo começa convertendo caos em Ordem estável.","unlock":"start"},
+		{"id":"codex_structures","title":"Estruturas","body":"Camada de consolidação. Elas reorganizam a produção e funcionam como multiplicadores especializados.","unlock":"structures"},
+		{"id":"codex_cores","title":"Núcleos","body":"Resultado de uma Recalibração. São o capital permanente da organização e sustentam a árvore meta.","unlock":"prestige"},
+		{"id":"codex_echoes","title":"Ecos","body":"Vestígios de runs tão densas que continuam ressoando. São raros e moldam o endgame.","unlock":"echoes"},
+		{"id":"codex_focus","title":"Diretivas de Foco","body":"Políticas ativas por run. Escolher a diretiva certa altera o ritmo entre clique, idle e resets.","unlock":"structures"},
+		{"id":"codex_automation","title":"Automação","body":"Autobuyers, auto-upgrades e auto-recalibração transformam o Bureau em uma máquina autônoma.","unlock":"prestige"},
+		{"id":"codex_campaign","title":"Protocolo Infinito","body":"O marco que sinaliza a conclusão da campanha base. O jogo continua, mas o departamento entra em uma nova era.","unlock":"campaign"}
 	]

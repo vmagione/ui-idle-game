@@ -22,6 +22,9 @@ var options_popup: Window
 @onready var objectives_list: VBoxContainer = %ObjectivesList
 @onready var log_list: VBoxContainer = %LogList
 @onready var milestone_text: RichTextLabel = %MilestoneText
+@onready var notifications_text: RichTextLabel = %NotificationsText
+@onready var achievements_text: RichTextLabel = %AchievementsText
+@onready var archive_text: RichTextLabel = %ArchiveText
 @onready var statistics_text: RichTextLabel = %StatisticsText
 @onready var options_text: RichTextLabel = %OptionsText
 @onready var help_text: RichTextLabel = %HelpText
@@ -34,6 +37,8 @@ var options_popup: Window
 @onready var auto_recalibrate_toggle: CheckBox = %AutoRecalibrateToggle
 @onready var auto_upgrade_toggle: CheckBox = %AutoUpgradeToggle
 @onready var auto_recalibrate_target: SpinBox = %AutoRecalibrateTarget
+@onready var focus_option: OptionButton = %FocusOption
+@onready var focus_description: RichTextLabel = %FocusDescription
 @onready var prestige_popup: AcceptDialog = %PrestigePopup
 @onready var offline_popup = %OfflineProgressPopup
 
@@ -69,6 +74,7 @@ func _connect_ui() -> void:
 	auto_recalibrate_toggle.toggled.connect(func(_v): GameManager.toggle_auto_recalibrate())
 	auto_upgrade_toggle.toggled.connect(func(_v): GameManager.toggle_auto_upgrade())
 	auto_recalibrate_target.value_changed.connect(GameManager.set_auto_recalibrate_target)
+	focus_option.item_selected.connect(_on_focus_selected)
 
 func _build_lists() -> void:
 	tabs.set_tab_title(0, "Produção")
@@ -76,9 +82,11 @@ func _build_lists() -> void:
 	tabs.set_tab_title(2, "Upgrades")
 	tabs.set_tab_title(3, "Meta")
 	tabs.set_tab_title(4, "Objetivos")
-	tabs.set_tab_title(5, "Estatísticas")
-	tabs.set_tab_title(6, "Opções")
-	tabs.set_tab_title(7, "Ajuda")
+	tabs.set_tab_title(5, "Conquistas")
+	tabs.set_tab_title(6, "Estatísticas")
+	tabs.set_tab_title(7, "Opções")
+	tabs.set_tab_title(8, "Ajuda")
+	tabs.set_tab_title(9, "Arquivo")
 	for child in production_list.get_children():
 		child.queue_free()
 	for child in upgrades_list.get_children():
@@ -152,6 +160,7 @@ func _refresh_all() -> void:
 	auto_recalibrate_toggle.set_pressed_no_signal(bool(s["automation"]["auto_recalibrate"]["enabled"]))
 	auto_upgrade_toggle.set_pressed_no_signal(bool(s["automation"]["auto_upgrades"]))
 	auto_recalibrate_target.value = float(s["automation"]["auto_recalibrate"]["target"])
+	_refresh_focus_controls()
 	quick_stats_label.text = "[b]Run[/b]\nTempo: %s\nProdução máxima: %s/s\nTotal da run: %s Ordem\nCampanha base: %s" % [
 		NumberFormatter.format_time(float(s["run_time"])),
 		NumberFormatter.format_number(float(s["stats"]["max_order_per_second"]), sci),
@@ -175,6 +184,9 @@ func _refresh_all() -> void:
 	_refresh_tabs()
 	_refresh_statistics()
 	_refresh_milestones()
+	_refresh_achievements()
+	_refresh_archive()
+	_refresh_notifications()
 	_refresh_log()
 	_animate_primary_button()
 
@@ -191,6 +203,23 @@ func _refresh_structures() -> void:
 func _refresh_tabs() -> void:
 	%StructuresTab.visible = GameManager.is_tab_unlocked("structures")
 	%MetaTab.visible = GameManager.is_tab_unlocked("meta")
+
+func _refresh_focus_controls() -> void:
+	var unlocked := GameManager.get_unlocked_focus_directives()
+	var current_id := String(GameManager.state["focus_directive"])
+	var selected_index := 0
+	if focus_option.item_count != unlocked.size():
+		focus_option.clear()
+		for directive in unlocked:
+			focus_option.add_item(directive["name"])
+			focus_option.set_item_metadata(focus_option.item_count - 1, directive["id"])
+	for i in range(focus_option.item_count):
+		if String(focus_option.get_item_metadata(i)) == current_id:
+			selected_index = i
+			break
+	focus_option.select(selected_index)
+	var current := GameManager.get_focus_def(current_id)
+	focus_description.text = "[b]%s[/b]\n%s" % [current.get("name", "Equilíbrio Operacional"), current.get("desc", "")]
 
 func _refresh_statistics() -> void:
 	var s: Dictionary = GameManager.get_state()
@@ -215,6 +244,26 @@ func _refresh_milestones() -> void:
 		lines.append("%s %s" % ["[color=#8be9a8]OK[/color]" if done else "[color=#ffd166]...[/color]", milestone["name"]])
 	milestone_text.text = "[b]Marcos Passivos[/b]\n%s" % "\n".join(lines)
 
+func _refresh_achievements() -> void:
+	var lines: Array[String] = ["[b]Conquistas Operacionais[/b]"]
+	for achievement in GameManager.achievement_defs:
+		var unlocked: bool = GameManager.state["achievements_completed"].has(achievement["id"])
+		var marker := "[color=#8be9a8]OK[/color]" if unlocked else "[color=#97a6c4]--[/color]"
+		lines.append("%s %s: %s" % [marker, achievement["name"], achievement["desc"]])
+	achievements_text.text = "\n".join(lines)
+
+func _refresh_archive() -> void:
+	var lines: Array[String] = ["[b]Arquivo Interno[/b]"]
+	for entry in GameManager.get_visible_codex_entries():
+		lines.append("[b]%s[/b]\n%s" % [entry["title"], entry["body"]])
+	archive_text.text = "\n\n".join(lines)
+
+func _refresh_notifications() -> void:
+	var lines: Array[String] = []
+	for note in GameManager.state["notifications"]:
+		lines.append("[color=#71d0ff]%s[/color] %s" % [note["time"], note["message"]])
+	notifications_text.text = "\n".join(lines) if not lines.is_empty() else "Sem destaques recentes."
+
 func _refresh_log() -> void:
 	for child in log_list.get_children():
 		child.queue_free()
@@ -238,3 +287,9 @@ func _on_prestige_pressed() -> void:
 		prestige_popup.popup_centered_ratio(0.35)
 	else:
 		GameManager.perform_prestige()
+
+func _on_focus_selected(index: int) -> void:
+	if index < 0:
+		return
+	var directive_id := String(focus_option.get_item_metadata(index))
+	GameManager.set_focus_directive(directive_id)

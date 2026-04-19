@@ -34,6 +34,10 @@ Você administra um departamento abstrato que transforma caos em `Ordem`. O loop
 - Recalibrar com Núcleos.
 - camada de Ecos e campanha base com `Protocolo Infinito`.
 - autobuyers, auto-upgrades e auto-recalibração.
+- Diretivas de Foco para alterar o estilo da run.
+- Conquistas Operacionais com bônus permanentes.
+- Arquivo/Codex interno desbloqueável.
+- painel de Destaques com notificações curtas.
 - save/load em JSON.
 - autosave.
 - progresso offline com popup de retorno.

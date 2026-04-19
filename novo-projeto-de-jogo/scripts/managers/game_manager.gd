@@ -6,6 +6,7 @@ signal objective_completed(objective_id: String)
 signal unlock_triggered(key: String)
 signal offline_progress_ready(report: Dictionary)
 signal prestige_ready_changed(can_prestige: bool)
+signal notification_added(message: String)
 
 const BUY_ONE := 1
 const BUY_TEN := 10
@@ -16,6 +17,9 @@ var structure_defs: Array = GameDatabase.structures()
 var upgrade_defs: Array = GameDatabase.upgrades()
 var objective_defs: Array = GameDatabase.objectives()
 var milestone_defs: Array = GameDatabase.milestones()
+var focus_defs: Array = GameDatabase.focus_directives()
+var achievement_defs: Array = GameDatabase.achievements()
+var codex_defs: Array = GameDatabase.codex_entries()
 
 var state: Dictionary = {}
 var _tick_accumulator := 0.0
@@ -49,6 +53,7 @@ func _notification(what: int) -> void:
 func reset_to_new_game(emit_change := true) -> void:
 	state = _make_fresh_state()
 	_apply_meta_starting_bonuses()
+	_check_codex_unlocks()
 	_recalculate_all()
 	if emit_change:
 		state_changed.emit()
@@ -98,7 +103,9 @@ func advance_time(seconds: float) -> void:
 	_check_unlocks()
 	_check_objectives()
 	_check_milestones()
+	_check_achievements()
 	_check_campaign_completion()
+	_check_codex_unlocks()
 	_emit_prestige_state_if_changed()
 
 func add_resource(resource: String, amount: float) -> void:
@@ -188,6 +195,13 @@ func toggle_auto_recalibrate() -> void:
 func set_auto_recalibrate_target(value: float) -> void:
 	state["automation"]["auto_recalibrate"]["target"] = maxf(1.0, value)
 
+func set_focus_directive(directive_id: String) -> void:
+	if not is_focus_directive_unlocked(directive_id):
+		return
+	state["focus_directive"] = directive_id
+	push_notification("Diretiva ativa: %s." % get_focus_def(directive_id)["name"])
+	state_changed.emit()
+
 func can_prestige() -> bool:
 	return get_projected_cores() >= 1.0
 
@@ -199,6 +213,9 @@ func get_projected_cores() -> float:
 	raw = maxf(0.0, floor(raw))
 	raw *= 1.0 + get_upgrade_level("prestige_studies") * 0.20
 	raw *= 1.0 + get_meta_level("core_yield") * 0.15
+	raw *= 1.0 + get_achievement_bonus("core_gain")
+	if state["focus_directive"] == "prestige":
+		raw *= 1.35
 	return floor(raw)
 
 func perform_prestige() -> bool:
@@ -212,6 +229,8 @@ func perform_prestige() -> bool:
 	stats_copy["total_cores_earned"] += gained
 	var completed_objectives: Dictionary = state["objectives_completed"].duplicate(true)
 	var completed_milestones: Dictionary = state["milestones_completed"].duplicate(true)
+	var completed_achievements: Dictionary = state["achievements_completed"].duplicate(true)
+	var unlocked_codex: Dictionary = state["codex_unlocked"].duplicate(true)
 	var meta_levels: Dictionary = _extract_meta_upgrades()
 	var keep_upgrades: Dictionary = {}
 	if get_upgrade_level("preservation_protocol") > 0:
@@ -224,6 +243,8 @@ func perform_prestige() -> bool:
 	state["stats"] = stats_copy
 	state["objectives_completed"] = completed_objectives
 	state["milestones_completed"] = completed_milestones
+	state["achievements_completed"] = completed_achievements
+	state["codex_unlocked"] = unlocked_codex
 	state["upgrades"].merge(meta_levels, true)
 	state["upgrades"].merge(keep_upgrades, true)
 	_apply_meta_starting_bonuses()
@@ -253,6 +274,11 @@ func get_click_value() -> float:
 	base *= 1.0 + get_structure_count("standardization") * (0.40 + 0.04 * get_upgrade_level("structure_blueprints"))
 	base += get_order_per_second() * (0.01 * get_upgrade_level("order_feedback"))
 	base *= 1.0 + _get_objective_multiplier_bonus()
+	base *= 1.0 + get_achievement_bonus("click_mult")
+	if state["focus_directive"] == "manual":
+		base *= 3.2
+	elif state["focus_directive"] == "industrial":
+		base *= 0.65
 	return maxf(1.0, base)
 
 func get_order_per_second() -> float:
@@ -290,6 +316,7 @@ func get_generator_output(generator_id: String) -> float:
 	if generator_id in ["scribes", "protocols", "archivists", "directives"]:
 		multiplier *= 1.0 + float(state["generators"]["councils"]) * 0.08 * get_upgrade_level("council_echoes")
 	multiplier *= 1.0 + _get_total_generators_bought() * 0.0025 * get_structure_count("scaling")
+	multiplier *= 1.0 + get_achievement_bonus("generator_mult", generator_id)
 	return base * multiplier
 
 func get_global_production_multiplier() -> float:
@@ -301,14 +328,23 @@ func get_global_production_multiplier() -> float:
 	mult *= 1.0 + get_structure_count("abstraction") * 0.18
 	mult *= 1.0 + get_meta_level("echo_resonator") * state["resources"]["echoes"]
 	mult *= 1.0 + _get_objective_multiplier_bonus()
+	mult *= 1.0 + get_achievement_bonus("global_mult")
 	if state["campaign_complete"]:
 		mult *= 1.5
+	if state["focus_directive"] == "manual":
+		mult *= 0.8
+	elif state["focus_directive"] == "industrial":
+		mult *= 1.45
 	return mult
 
 func get_structure_generation_per_second() -> float:
 	if not is_tab_unlocked("structures"):
 		return 0.0
-	return maxf(0.0, get_order_per_second() / 2500.0) * (0.02 + get_structure_count("abstraction") * 0.005)
+	var rate := maxf(0.0, get_order_per_second() / 2500.0) * (0.02 + get_structure_count("abstraction") * 0.005)
+	rate *= 1.0 + get_achievement_bonus("structure_efficiency")
+	if state["focus_directive"] == "resonant":
+		rate *= 1.35
+	return rate
 
 func can_generate_echoes() -> bool:
 	return is_tab_unlocked("echoes")
@@ -318,15 +354,20 @@ func get_echo_gain_rate() -> float:
 		return 0.0
 	var rate := pow(maxf(1.0, state["total_resources"]["order"]) / 1.0e10, 0.18) * 0.002
 	rate *= 1.0 + get_upgrade_level("echo_lens") * 0.5
+	rate *= 1.0 + get_achievement_bonus("echo_gain")
+	if state["focus_directive"] == "resonant":
+		rate *= 1.45
 	return rate
 
 func get_generator_cost(generator_id: String) -> float:
 	var def := get_generator_def(generator_id)
-	return def["base_cost"] * NumberUtils.safe_pow(def["growth"] * get_generator_cost_discount(), int(state["generators"][generator_id]))
+	var extra_growth := 1.06 if state["focus_directive"] == "resonant" else 1.0
+	return def["base_cost"] * NumberUtils.safe_pow(def["growth"] * get_generator_cost_discount() * extra_growth, int(state["generators"][generator_id]))
 
 func get_generator_bulk_cost(generator_id: String, quantity: int) -> float:
 	var def := get_generator_def(generator_id)
-	return NumberUtils.geometric_cost(def["base_cost"], def["growth"] * get_generator_cost_discount(), int(state["generators"][generator_id]), quantity)
+	var extra_growth := 1.06 if state["focus_directive"] == "resonant" else 1.0
+	return NumberUtils.geometric_cost(def["base_cost"], def["growth"] * get_generator_cost_discount() * extra_growth, int(state["generators"][generator_id]), quantity)
 
 func get_structure_cost(structure_id: String) -> float:
 	var def := get_structure_def(structure_id)
@@ -398,12 +439,69 @@ func get_visible_objectives() -> Array:
 func get_visible_milestones() -> Array:
 	return milestone_defs
 
+func get_focus_def(directive_id: String) -> Dictionary:
+	for item in focus_defs:
+		if item["id"] == directive_id:
+			return item
+	return {}
+
+func is_focus_directive_unlocked(directive_id: String) -> bool:
+	var directive := get_focus_def(directive_id)
+	var unlock_key := String(directive.get("unlock", "start"))
+	match unlock_key:
+		"start":
+			return true
+		"structures":
+			return is_tab_unlocked("structures")
+		"prestige":
+			return is_tab_unlocked("prestige")
+		"echoes":
+			return is_tab_unlocked("echoes")
+		"campaign":
+			return state["campaign_complete"]
+	return false
+
+func get_unlocked_focus_directives() -> Array:
+	var unlocked := []
+	for directive in focus_defs:
+		if is_focus_directive_unlocked(String(directive["id"])):
+			unlocked.append(directive)
+	return unlocked
+
+func get_achievement_bonus(bonus_type: String, target := "") -> float:
+	var total := 0.0
+	for achievement in achievement_defs:
+		var achievement_id := String(achievement["id"])
+		if not state["achievements_completed"].has(achievement_id):
+			continue
+		var reward: Dictionary = achievement["reward"]
+		if String(reward.get("type", "")) != bonus_type:
+			continue
+		if bonus_type == "generator_mult" and String(reward.get("target", "")) != String(target):
+			continue
+		total += float(reward.get("value", 0.0))
+	return total
+
+func get_visible_codex_entries() -> Array:
+	var visible := []
+	for entry in codex_defs:
+		if state["codex_unlocked"].has(String(entry["id"])):
+			visible.append(entry)
+	return visible
+
 func log_event(message: String) -> void:
 	var timestamp := Time.get_datetime_string_from_system(false, true)
 	state["log"].push_front({"time": timestamp, "message": message})
 	while state["log"].size() > GameDatabase.LOG_LIMIT:
 		state["log"].pop_back()
 	log_added.emit(message)
+
+func push_notification(message: String) -> void:
+	var timestamp := Time.get_datetime_string_from_system(false, true)
+	state["notifications"].push_front({"time": timestamp, "message": message})
+	while state["notifications"].size() > GameDatabase.NOTIFICATION_LIMIT:
+		state["notifications"].pop_back()
+	notification_added.emit(message)
 
 func _run_automation() -> void:
 	var autobuy_enabled: bool = get_upgrade_level("autobuyer_permit") > 0 or (state["stats"]["total_recalibrations"] >= 1 and get_upgrade_level("automation_bus") > 0)
@@ -422,24 +520,60 @@ func _run_automation() -> void:
 	if auto_recal["enabled"] and can_prestige() and get_projected_cores() >= float(auto_recal["target"]):
 		perform_prestige()
 
+func _check_achievements() -> void:
+	for achievement in achievement_defs:
+		var achievement_id := String(achievement["id"])
+		if state["achievements_completed"].has(achievement_id):
+			continue
+		if _is_achievement_complete(achievement):
+			state["achievements_completed"][achievement_id] = true
+			log_event("Conquista desbloqueada: %s." % achievement["name"])
+			push_notification("Conquista: %s." % achievement["name"])
+
+func _check_codex_unlocks() -> void:
+	for entry in codex_defs:
+		var entry_id := String(entry["id"])
+		if state["codex_unlocked"].has(entry_id):
+			continue
+		var unlock_key := String(entry.get("unlock", "start"))
+		var unlocked := false
+		match unlock_key:
+			"start":
+				unlocked = true
+			"structures":
+				unlocked = is_tab_unlocked("structures")
+			"prestige":
+				unlocked = is_tab_unlocked("prestige")
+			"echoes":
+				unlocked = is_tab_unlocked("echoes")
+			"campaign":
+				unlocked = state["campaign_complete"]
+		if unlocked:
+			state["codex_unlocked"][entry_id] = true
+			push_notification("Arquivo atualizado: %s." % entry["title"])
+
 func _check_unlocks() -> void:
 	if not is_tab_unlocked("structures") and state["total_resources"]["order"] >= GameDatabase.STRUCTURE_UNLOCK_TOTAL_ORDER:
 		state["unlocks"]["main_tabs"]["structures"] = true
 		unlock_triggered.emit("structures")
 		log_event("Estruturas desbloqueadas.")
+		push_notification("Nova aba: Estruturas.")
 	if not is_tab_unlocked("prestige") and state["total_resources"]["order"] >= GameDatabase.PRESTIGE_UNLOCK_TOTAL_ORDER:
 		state["unlocks"]["main_tabs"]["prestige"] = true
 		unlock_triggered.emit("prestige")
 		log_event("Recalibrar disponível.")
+		push_notification("Recalibrar disponível.")
 	if not is_tab_unlocked("meta") and state["stats"]["total_cores_earned"] >= GameDatabase.META_TREE_UNLOCK_CORES:
 		state["unlocks"]["main_tabs"]["meta"] = true
 		state["meta_unlocked"] = true
 		unlock_triggered.emit("meta")
 		log_event("Árvore de Núcleos desbloqueada.")
+		push_notification("Nova aba: Meta.")
 	if not is_tab_unlocked("echoes") and state["total_resources"]["order"] >= GameDatabase.ECHO_UNLOCK_TOTAL_ORDER:
 		state["unlocks"]["main_tabs"]["echoes"] = true
 		unlock_triggered.emit("echoes")
 		log_event("Ecos detectados no departamento.")
+		push_notification("Ecos detectados.")
 
 func _check_objectives() -> void:
 	for objective in objective_defs:
@@ -451,6 +585,7 @@ func _check_objectives() -> void:
 			_apply_objective_reward(objective["reward"])
 			objective_completed.emit(objective_id)
 			log_event("Objetivo concluído: %s." % objective["name"])
+			push_notification("Objetivo concluído: %s." % objective["name"])
 
 func _check_milestones() -> void:
 	for milestone in milestone_defs:
@@ -460,6 +595,7 @@ func _check_milestones() -> void:
 		if _is_milestone_complete(milestone):
 			state["milestones_completed"][milestone_id] = true
 			log_event("Marco atingido: %s." % milestone["name"])
+			push_notification("Marco: %s." % milestone["name"])
 
 func _check_campaign_completion() -> void:
 	if state["campaign_complete"]:
@@ -468,6 +604,7 @@ func _check_campaign_completion() -> void:
 		state["campaign_complete"] = true
 		state["stats"]["campaign_complete"] = 1
 		log_event("Protocolo Infinito ativado. Campanha base concluída.")
+		push_notification("Campanha base concluída.")
 
 func _is_objective_complete(objective: Dictionary) -> bool:
 	match String(objective["target_type"]):
@@ -501,6 +638,25 @@ func _is_milestone_complete(milestone: Dictionary) -> bool:
 			return state["total_resources"]["order"] >= float(milestone["value"])
 	return false
 
+func _is_achievement_complete(achievement: Dictionary) -> bool:
+	match String(achievement["kind"]):
+		"stat":
+			var stat_key := String(achievement["target"])
+			if state["stats"].has(stat_key):
+				return float(state["stats"].get(stat_key, 0.0)) >= float(achievement["value"])
+			return false
+		"total_order":
+			return state["total_resources"]["order"] >= float(achievement["value"])
+		"generator":
+			return int(state["generators"].get(String(achievement["target"]), 0)) >= int(achievement["value"])
+		"structures_total":
+			return get_total_structures_owned() >= int(achievement["value"])
+		"resource":
+			return float(state["resources"].get(String(achievement["target"]), 0.0)) >= float(achievement["value"])
+		"objectives_completed":
+			return state["objectives_completed"].size() >= int(achievement["value"])
+	return false
+
 func _apply_objective_reward(reward: Dictionary) -> void:
 	if reward.has("resource"):
 		var amount := float(reward["amount"]) * (1.0 + get_upgrade_level("mission_division") * 0.35)
@@ -521,6 +677,8 @@ func _milestone_strength(owned: int, thresholds: Array, per_threshold_strength: 
 
 func _recalculate_all() -> void:
 	_check_unlocks()
+	_check_achievements()
+	_check_codex_unlocks()
 	state_changed.emit()
 	_emit_prestige_state_if_changed()
 
@@ -563,12 +721,16 @@ func _make_fresh_state() -> Dictionary:
 		"objective_multiplier_bonus": 0.0,
 		"objectives_completed": {},
 		"milestones_completed": {},
+		"achievements_completed": {},
+		"codex_unlocked": {},
 		"meta_unlocked": false,
 		"campaign_complete": false,
+		"focus_directive": "balanced",
 		"run_time": 0.0,
 		"time_since_last_improvement": 0.0,
 		"last_save_time": Time.get_unix_time_from_system(),
 		"log": [],
+		"notifications": [],
 		"unlocks": {"main_tabs": {"production": true, "structures": false, "upgrades": true, "meta": false, "objectives": true, "statistics": true, "options": true, "help": true, "prestige": false, "echoes": false}},
 		"automation": {"autobuyers": autobuyers, "auto_upgrades": false, "auto_recalibrate": {"enabled": false, "target": 5.0}},
 		"stats": {"total_play_time": 0.0, "total_clicks": 0, "max_order_per_second": 0.0, "highest_order": 0.0, "total_generators_bought": 0, "total_recalibrations": 0, "total_cores_earned": 0.0, "total_echoes_earned": 0.0, "total_structures_earned": 0.0, "last_offline_seconds": 0.0, "campaign_complete": 0}
